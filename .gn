@@ -1,0 +1,5 @@
+# This file is used by the gn meta-buildsystem find the root of the source tree
+# and to set startup options.
+
+# Use preset Chromium build configurations.
+use_chromium_config = true
