@@ -22,20 +22,24 @@ process.env.PATH = `${gnDir}${path.delimiter}${process.env.PATH}`
 const version = String(execSync('git describe --always --tags')).trim()
 
 // Get target OS.
-const targetOs = {
+let targetOs = {
   win32: 'win',
   linux: 'linux',
   darwin: 'mac',
 }[process.platform]
+const hostOs = targetOs
 
 // Get target_cpu from args.gn.
 let targetCpu = 'x64'
-let clang = targetOs != 'win'
+let clang = true
 if (fs.existsSync('out/Release/args.gn')) {
   const content = String(fs.readFileSync('out/Release/args.gn'))
-  const match = content.match(/target_cpu = "(.*)"/)
-  if (match && match.length > 1)
-    targetCpu = match[1]
+  const matchCpu = content.match(/target_cpu = "(.*)"/)
+  if (matchCpu && matchCpu.length > 1)
+    targetCpu = matchCpu[1]
+  const matchOs = content.match(/target_os = "(.*)"/)
+  if (matchOs && matchOs.length > 1)
+    targetOs = matchOs[1]
   if (content.includes('is_clang = true'))
     clang = true
   else
@@ -60,6 +64,9 @@ const argv = process.argv.slice(2).filter((arg) => {
     return false
   } else if (arg.startsWith('--target-cpu=')) {
     targetCpu = arg.substr(arg.indexOf('=') + 1)
+    return false
+  } else if (arg.startsWith('--target-os=')) {
+    targetOs = arg.substr(arg.indexOf('=') + 1)
     return false
   } else {
     return true
@@ -116,6 +123,7 @@ module.exports = {
   targetCpu,
   targetOs,
   hostCpu,
+  hostOs,
   streamPromise,
   execSync: execSyncWrapper,
   spawnSync: spawnSyncWrapper,

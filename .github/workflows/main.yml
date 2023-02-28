@@ -2,48 +2,39 @@ name: node
 
 on: push
 
+env:
+  WIN_SDK_VERSION: 22621
+
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    needs: [vs-toolchain]
+    runs-on: ${{ fromJson('{"linux":"ubuntu-22.04","mac":"macos-12","win":"ubuntu-22.04"}')[matrix.targetOs] }}
     continue-on-error: false
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-12]
+        targetOs: [linux, mac, win]
         arch: [x64, arm64]
         include:
-          - os: ubuntu-22.04
+          - targetOs: linux
             arch: x86
-          - os: ubuntu-22.04
-            arch: arm
-          - os: windows-2022
+          - targetOs: win
             arch: x86
 
     steps:
       - name: Install Linux Dependencies
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt update
-          sudo apt install -y cmake libgtk-3-dev libnotify-dev libwebkit2gtk-4.0-dev
-          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
-          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang 100
-          /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        if: runner.os == 'Linux' && matrix.targetOs == 'win'
+        # Needed for running ciopfs, used when setup vs toolchain.
+        run: sudo apt install -y fuse
 
       - name: Install Linux Cross Compilation Toolchains
-        if: startsWith(matrix.os, 'ubuntu') && matrix.arch != 'x64'
+        if: matrix.targetOs == 'linux' && matrix.arch != 'x64'
         run: sudo apt install -y gcc-multilib g++-multilib
 
       - name: Install Linux Arm Toolchains
-        if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.arch, 'arm')
+        if: matrix.targetOs == 'linux' && startsWith(matrix.arch, 'arm')
         run: sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libc6-dev-armhf-cross linux-libc-dev-armhf-cross binutils-aarch64-linux-gnu
-
-      - name: CCache
-        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          max-size: ${{ matrix.arch == 'arm64' && '3G' || '2G' }}
-          key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
       - uses: actions/setup-python@v3
         with:
@@ -52,9 +43,52 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Get Windows SDK
+        if: matrix.targetOs == 'win'
+        uses: actions/cache/restore@v3
+        with:
+          path: '*.zip'
+          key: vs-toolchain-${{ env.WIN_SDK_VERSION }}
+          fail-on-cache-miss: true
+          enableCrossOsArchive: true
+
       - name: Build
-        env:
-          CCACHE_SLOPPINESS: time_macros
         run: |
-          node scripts/bootstrap.js --ccache
+          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }}  --target-cpu=${{ matrix.arch }}
           node scripts/build.js
+
+  vs-toolchain:
+    runs-on: windows-2022
+    continue-on-error: false
+
+    steps:
+      - name: Check cache
+        id: check-cache
+        # It is not job failure when this step fails.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          # Check if vs-toolchain has been generated before.
+          gh extension install actions/gh-actions-cache
+          gh actions-cache list --repo $GITHUB_REPOSITORY | grep -q vs-toolchain-$WIN_SDK_VERSION
+
+      - name: Checkout
+        if: steps.check-cache.outcome == 'failure'
+        uses: actions/checkout@v3
+        with:
+          repository: yue/build-gn
+
+      - name: Generate Windows SDK package
+        if: steps.check-cache.outcome == 'failure'
+        # See: https://chromium.googlesource.com/chromium/src/+/master/docs/win_cross.md
+        run: python third_party/depot_tools/win_toolchain/package_from_installed.py 2022 -w 10.0.${env:WIN_SDK_VERSION}.0
+
+      - name: Save to cache
+        uses: actions/cache/save@v3
+        if: steps.check-cache.outcome == 'failure'
+        with:
+          path: '*.zip'
+          key: vs-toolchain-${{ env.WIN_SDK_VERSION }}
+          enableCrossOsArchive: true

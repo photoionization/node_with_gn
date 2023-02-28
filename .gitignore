@@ -8,6 +8,7 @@
 
 .DS_Store
 .tags*
+*.zip
 *.xcodeproj
 *.swp
 *.pyc
