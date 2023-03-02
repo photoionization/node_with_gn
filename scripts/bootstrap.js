@@ -4,9 +4,6 @@ const {argv, clang, hostCpu, hostOs, targetCpu, targetOs, execSync, spawnSync} =
 
 const fs = require('fs')
 
-execSync('git submodule sync --recursive')
-execSync('git submodule update --init --recursive')
-
 // Download GN.
 execSync('node scripts/download_gn.js')
 // Download clang binaries.
@@ -24,15 +21,24 @@ if (hostOs == 'linux') {
   execSync(`python third_party/gn/build/linux/sysroot_scripts/install-sysroot.py --arch ${targetArch}`)
 }
 
+// Checkout node.
+checkoutNode()
 // Checkout dependencies needed for building V8.
 checkoutDeps()
+// Generate node_files.json.
+execSync('python gn_tools/generate_node_files_json.py')
 
 const commonConfig = [
   `is_clang=${clang}`,
   `target_cpu="${targetCpu}"`,
   `target_os="${targetOs}"`,
-  // Ignore warnings.
+  // V8 settings required by Node.
+  'v8_enable_sandbox=false',
+  'v8_use_external_startup_data=false',
+  'v8_enable_javascript_promise_hooks=true',
+  // Not our job fixing the warnings.
   'treat_warnings_as_errors=false',
+  'clang_use_chrome_plugins=false',
 ]
 const componentConfig = [
   'is_component_build=true',
@@ -50,6 +56,9 @@ const releaseConfig = [
 if (hostOs == 'mac') {
   // Default xcode clang is not supported for building v8.
   commonConfig.push('use_xcode_clang=false')
+  // The node/deps/ada uses to_chars which is not available until 10.15.
+  commonConfig.push('mac_deployment_target="10.15"',
+                    'mac_min_system_version="10.15"')
 }
 if (hostOs == 'linux') {
   // Ensure stable environment.
@@ -67,6 +76,24 @@ gen('out/Component', componentConfig)
 gen('out/Debug', debugConfig)
 gen('out/Release', releaseConfig)
 
+function checkoutNode() {
+  if (fs.existsSync('node'))
+    return
+  let nodeRepo = 'https://github.com/nodejs/node'
+  let nodeCommit
+  for (const arg of argv) {
+    if (arg.startsWith('--node-repo='))
+      nodeRepo = arg.substr(arg.indexOf('=') + 1)
+    else if (arg.startsWith('--node-commit='))
+      nodeCommit = arg.substr(arg.indexOf('=') + 1)
+  }
+  execSync(`git clone --depth=1 ${nodeRepo}`)
+  if (nodeCommit) {
+    execSync(`git fetch origin ${nodeCommit}`, {cwd: 'node'})
+    execSync('git reset --hard FETCH_HEAD', {cwd: 'node'})
+  }
+}
+
 function checkoutDeps() {
   const deps = {
     "icu": "https://chromium.googlesource.com/chromium/deps/icu",
@@ -82,9 +109,5 @@ function checkoutDeps() {
 }
 
 function gen(dir, args) {
-  const env = {}
-  // This env is used to instruct build settings to use bundled vs toolchain.
-  if (targetOs == 'win' && targetOs != hostOs)
-    env.DEPOT_TOOLS_WIN_TOOLCHAIN = 1
-  spawnSync('gn', ['gen', dir, `--args=${commonConfig.concat(args).join(' ')}`], {env})
+  spawnSync('gn', ['gen', dir, `--args=${commonConfig.concat(args).join(' ')}`])
 }

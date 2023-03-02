@@ -1,5 +1,8 @@
-/out/
+/node_files.json
+/*.zip
 
+/node
+/out/
 /third_party/gn/
 /third_party/icu/
 /third_party/jinja2/
@@ -8,7 +11,6 @@
 
 .DS_Store
 .tags*
-*.zip
 *.xcodeproj
 *.swp
 *.pyc

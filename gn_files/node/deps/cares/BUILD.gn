@@ -1,0 +1,65 @@
+# Copyright (c) 2013-2019 GitHub Inc.
+# Copyright 2019 the V8 project authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//node/node_files.gni")
+import("//node/node.gni")
+
+config("cares_config") {
+  include_dirs = [ "include", "src/lib" ]
+}
+
+node_dep("cares") {
+  defines = [ "CARES_STATICLIB" ]
+  include_dirs = [
+    "include",
+    "src/lib",
+  ]
+  public_configs = [ ":cares_config" ]
+
+  libs = []
+  cflags_c = [
+    "-Wno-logical-not-parentheses",
+    "-Wno-sign-compare",
+  ]
+
+  sources = node_files.cares_sources
+
+  if (!is_win) {
+    defines += [
+      "_DARWIN_USE_64_BIT_INODE=1",
+      "_LARGEFILE_SOURCE",
+      "_FILE_OFFSET_BITS=64",
+      "_GNU_SOURCE",
+    ]
+  }
+
+  if (is_win) {
+    defines += [ "CARES_PULL_WS2TCPIP_H=1" ]
+    include_dirs += [ "config/win32" ]
+    sources += [
+      "src/lib/ares_getenv.c",
+      "src/lib/ares_iphlpapi.h",
+      "src/lib/ares_platform.c",
+      "src/lib/config-win32.h",
+      "src/lib/windows_port.c",
+    ]
+    libs += [
+      "ws2_32.lib",
+      "iphlpapi.lib",
+    ]
+  } else {
+    defines += [ "HAVE_CONFIG_H" ]
+  }
+
+  if (is_linux) {
+    include_dirs += [ "config/linux" ]
+    sources += [ "config/linux/ares_config.h" ]
+  }
+
+  if (is_mac) {
+    include_dirs += [ "config/darwin" ]
+    sources += [ "config/darwin/ares_config.h" ]
+  }
+}

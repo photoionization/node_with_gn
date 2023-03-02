@@ -73,20 +73,9 @@ const argv = process.argv.slice(2).filter((arg) => {
   }
 })
 
-// Turn stream into Promise.
-function streamPromise(stream) {
-  return new Promise((resolve, reject) => {
-    stream.on('end', () => {
-      resolve('end')
-    })
-    stream.on('finish', () => {
-      resolve('finish')
-    })
-    stream.on('error', (error) => {
-      reject(error)
-    })
-  })
-}
+// This env is used to instruct build settings to use bundled vs toolchain.
+if (targetOs == 'win' && targetOs != hostOs)
+  process.env.DEPOT_TOOLS_WIN_TOOLCHAIN = 1
 
 // Helper around execSync.
 const execSyncWrapper = (command, options = {}) => {
@@ -124,7 +113,6 @@ module.exports = {
   targetOs,
   hostCpu,
   hostOs,
-  streamPromise,
   execSync: execSyncWrapper,
   spawnSync: spawnSyncWrapper,
 }

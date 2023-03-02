@@ -1,0 +1,16 @@
+# Copyright 2023 Microsoft Inc.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//node/node.gni")
+
+config("postject_config") {
+  include_dirs = [ "." ]
+}
+
+node_dep("postject") {
+  public_configs = [ ":postject_config" ]
+  sources = [
+    "postject-api.h",
+  ]
+}

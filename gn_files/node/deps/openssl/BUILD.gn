@@ -1,0 +1,88 @@
+# Copyright 2019 the V8 project authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//node/node_files.gni")
+import("//node/node.gni")
+
+declare_args() {
+  # Defaults for OpenSSL config path.
+  if (is_linux) {
+    openssl_dir = "/etc/ssl/"
+  } else if (is_mac) {
+    openssl_dir = "/System/Library/OpenSSL/"
+  } else {
+    openssl_dir = ""
+  }
+
+  # Security level as described in
+  # https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_security_level.html
+  openssl_seclevel = 1
+}
+
+config("external_config") {
+  include_dirs = [ "openssl/include" ]
+}
+
+config("internal_config") {
+  cflags_c = [
+    "-Wno-implicit-function-declaration",
+    "-Wno-constant-conversion",
+    "-Wno-incompatible-pointer-types",
+    "-Wno-constant-conversion",
+  ]
+  if (is_posix) {
+    asmflags = [ "-fPIC" ]
+    cflags = [ "-fPIC" ]
+    ldflags = [ "-fPIC" ]
+  }
+  cflags_cc = [ "-Wno-sign-compare" ]
+  include_dirs = [
+    "openssl",
+    "openssl/crypto/",
+    "openssl/crypto/include/",
+    "openssl/crypto/include/internal",
+    "openssl/crypto/modes/",
+    "openssl/crypto/ec/curve448",
+    "openssl/crypto/ec/curve448/arch_32",
+    "openssl/providers/common/include/",
+    "openssl/providers/implementations/include",
+    "config/archs/linux-x86_64/no-asm/crypto",
+    "config/archs/linux-x86_64/no-asm/providers/common/include",
+    "config",
+  ]
+  if (is_win) {
+    libs = [ "crypt32.lib" ]
+  }
+}
+
+openssl_defines = [
+  "NDEBUG",
+  "OPENSSL_USE_NODELETE",
+  "L_ENDIAN",
+  "OPENSSL_PIC",
+  "OPENSSL_NO_ASM",
+  "OPENSSL_NO_HW",
+  "OPENSSLDIR=\"$openssl_dir\"",
+  "ENGINESDIR=\"/dev/null\"",
+  "OPENSSL_TLS_SECURITY_LEVEL=$openssl_seclevel",
+  "MODULESDIR=\"deps/openssl/lib/openssl-modules\"",
+]
+
+source_set("openssl_crypto_o_str") {
+  # This is a hack to undef _GNU_SOURCE only for openssl/crypto/o_str.c
+  visibility = [ ":openssl" ]
+  sources = [ "openssl/crypto/o_str.c" ]
+  defines = openssl_defines
+  configs += [ ":internal_config", ":external_config" ]
+  cflags = [ "-U_GNU_SOURCE" ]
+}
+
+node_dep("openssl") {
+  sources = node_files.openssl_sources
+  sources -= [ "openssl/crypto/o_str.c" ]
+  defines = openssl_defines
+  public_configs = [ ":external_config" ]
+  configs = [ ":internal_config" ]
+  deps = [ ":openssl_crypto_o_str" ]
+}

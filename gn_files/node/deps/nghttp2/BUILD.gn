@@ -1,0 +1,28 @@
+# Copyright (c) 2013-2019 GitHub Inc.
+# Copyright 2019 the V8 project authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//node/node_files.gni")
+import("//node/node.gni")
+
+config("nghttp2_config") {
+  defines = [ "NGHTTP2_STATICLIB" ]
+  include_dirs = [ "lib/includes" ]
+}
+
+node_dep("nghttp2") {
+  public_configs = [ ":nghttp2_config" ]
+  defines = [
+    "_U_",
+    "BUILDING_NGHTTP2",
+    "NGHTTP2_STATICLIB",
+    "HAVE_CONFIG_H"
+  ]
+  include_dirs = [ "lib/includes" ]
+  cflags_c = [
+     "-Wno-implicit-function-declaration",
+     "-Wno-string-plus-int"
+  ]
+  sources = node_files.nghttp2_sources
+}

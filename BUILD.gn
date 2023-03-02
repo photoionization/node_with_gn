@@ -1,5 +1,3 @@
 group("default") {
-  deps = [
-    "node/deps/v8",
-  ]
+  deps = [ "node" ]
 }

@@ -1,0 +1,29 @@
+# Copyright 2023 Microsoft Inc.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//node/deps/v8/gni/v8.gni")
+import("//node/node.gni")
+
+config("ada_config") {
+  include_dirs = [ "." ]
+}
+
+node_dep("ada") {
+  public_configs = [ ":ada_config" ]
+  sources = [
+    "ada.cpp",
+    "ada.h",
+  ]
+  if (v8_enable_i18n_support) {
+    deps = [
+      "//third_party/icu:icui18n",
+      "//third_party/icu:icuuc",
+    ]
+    if (is_win) {
+      deps += [ "//third_party/icu:icudata" ]
+    }
+  } else {
+    defines = [ "ADA_HAS_ICU=0" ]
+  }
+}

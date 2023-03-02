@@ -1,0 +1,24 @@
+# Copyright (c) 2013-2019 GitHub Inc.
+# Copyright 2019 the V8 project authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//node/node.gni")
+
+config("simdutf_config") {
+  include_dirs = [ "." ]
+}
+
+node_dep("simdutf") {
+  public_configs = [ ":simdutf_config" ]
+  sources = [
+    "simdutf.cpp",
+    "simdutf.h",
+  ]
+  if (is_clang) {
+    cflags_cc = [
+      "-Wno-ambiguous-reversed-operator",
+      "-Wno-unused-function",
+    ]
+  }
+}
