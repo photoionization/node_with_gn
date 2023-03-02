@@ -74,6 +74,16 @@ jobs:
           gh extension install actions/gh-actions-cache
           gh actions-cache list --repo $GITHUB_REPOSITORY | grep -q vs-toolchain-$WIN_SDK_VERSION
 
+      - name: Validate branch
+        if: steps.check-cache.outcome == 'failure'
+        run: |
+          # GitHub limits where cache is accessible, we don't want to create
+          # vs toolchain for every branch so force creating one on main branch.
+          if (${env:GITHUB_BASE_REF} -ne 'main') {
+            Write-Output 'Can not create vs-toolchain in a sub-branch, please re-run the main branch job.'
+            Exit 1
+          }
+
       - name: Checkout
         if: steps.check-cache.outcome == 'failure'
         uses: actions/checkout@v3
