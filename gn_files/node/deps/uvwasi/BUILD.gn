@@ -1,19 +1,22 @@
 # Copyright (c) 2013-2019 GitHub Inc.
 # Copyright 2019 the V8 project authors. All rights reserved.
+# Copyright 2023 Microsoft Inc.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node.gni")
-
-config("includes") {
-  include_dirs = [
-      "include",
-      "src",
-  ]
+config("uvwasi_config") {
+  include_dirs = [ "include" ]
 }
 
-node_dep("uvwasi") {
+source_set("uvwasi") {
+  public_configs = [ ":uvwasi_config" ]
+  deps = [ "//node/deps/uv" ]
+
+  include_dirs = [ "src" ]
   sources = [
+    "include/fd_table.h",
+    "include/uv_wasi.h",
+    "include/wasi_types.h",
     "src/clocks.c",
     "src/clocks.h",
     "src/debug.h",
@@ -29,16 +32,5 @@ node_dep("uvwasi") {
     "src/wasi_rights.c",
     "src/wasi_rights.h",
     "src/wasi_serdes.c",
-    "include/fd_table.h",
-    "include/uv_wasi.h",
-    "include/wasi_types.h",
-  ]
-
-  public_configs = [
-    ":includes"
-  ]
-
-  deps = [
-      "//node/deps/uv"
   ]
 }

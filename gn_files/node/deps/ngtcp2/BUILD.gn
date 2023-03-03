@@ -3,36 +3,25 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node.gni")
-
 config("ngtcp2_config") {
-  defines = [ "NGTCP2_STATICLIB" ]
   include_dirs = [
-    "ngtcp2/lib/includes/",
-    "ngtcp2/crypto/includes/",
+    "nghttp3/lib/",
     "nghttp3/lib/includes/",
-    "nghttp3/lib/"
+    "ngtcp2/crypto/includes/",
+    "ngtcp2/lib/includes/",
   ]
-}
-
-node_dep("ngtcp2") {
-  public_configs = [ ":ngtcp2_config" ]
   defines = [
-    "_U_",
-    "BUILDING_NGTCP2",
     "NGTCP2_STATICLIB",
     "NGHTTP3_STATICLIB",
   ]
+}
 
-  include_dirs = [
-    "ngtcp2/lib/includes/",
-    "ngtcp2/crypto/includes/",
-    "ngtcp2/lib/",
-    "ngtcp2/crypto/",
-    "nghttp3/lib/includes/",
-    "nghttp3/lib/"
-  ]
+# FIXME(zcbenz): Some APIs of ngtcp2 are not marked as export, so can not turn
+# into component. This should be fixed in upstream ngtcp2
+static_library("ngtcp2") {
+  public_configs = [ ":ngtcp2_config" ]
 
+  defines = [ "_U_" ]
   if (is_win) {
     defines += [
       "WIN32",
@@ -40,7 +29,6 @@ node_dep("ngtcp2") {
       "HAVE_CONFIG_H",
     ]
   }
-
   if (is_linux) {
     defines += [
       "HAVE_ARPA_INET_H",
@@ -48,11 +36,11 @@ node_dep("ngtcp2") {
     ]
   }
 
-  cflags_c = [
-     "-Wno-implicit-function-declaration",
-     "-Wno-string-plus-int",
-     "-Wno-sometimes-uninitialized",
-     "-Wno-return-type"
+  include_dirs = [
+    ".",
+    "ngtcp2/lib/",
+    "ngtcp2/crypto/",
+    "nghttp3/lib/"
   ]
 
   sources = [

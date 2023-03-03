@@ -4,25 +4,23 @@
 # found in the LICENSE file.
 
 import("//node/node_files.gni")
-import("//node/node.gni")
 
 config("nghttp2_config") {
-  defines = [ "NGHTTP2_STATICLIB" ]
   include_dirs = [ "lib/includes" ]
+  if (!is_component_build) {
+    defines = [ "NGHTTP2_STATICLIB" ]
+  }
 }
 
-node_dep("nghttp2") {
+component("nghttp2") {
   public_configs = [ ":nghttp2_config" ]
   defines = [
     "_U_",
-    "BUILDING_NGHTTP2",
-    "NGHTTP2_STATICLIB",
     "HAVE_CONFIG_H"
   ]
-  include_dirs = [ "lib/includes" ]
-  cflags_c = [
-     "-Wno-implicit-function-declaration",
-     "-Wno-string-plus-int"
-  ]
+  if (is_component_build) {
+    defines += [ "BUILDING_NGHTTP2" ]
+  }
+
   sources = node_files.nghttp2_sources
 }

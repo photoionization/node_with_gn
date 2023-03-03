@@ -2,13 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node.gni")
-
-config("gtest_config") {
+config("googletest_config") {
   include_dirs = [ "include" ]
 }
 
-node_dep("googletest") {
+source_set("googletest") {
   testonly = true
   include_dirs = [
     "include",
@@ -41,7 +39,6 @@ node_dep("googletest") {
     "include/gtest/internal/custom/gtest-port.h",
     "include/gtest/internal/custom/gtest-printers.h",
     "include/gtest/internal/custom/gtest.h",
-    "src/gtest-all.cc",
     "src/gtest-death-test.cc",
     "src/gtest-filepath.cc",
     "src/gtest-internal-inl.h",

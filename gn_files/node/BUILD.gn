@@ -57,6 +57,12 @@ assert(!node_enable_inspector || node_use_openssl,
 
 config("node_features") {
   defines = []
+  if (is_component_build) {
+    defines += [
+      "USING_UV_SHARED",
+      "USING_V8_SHARED",
+    ]
+  }
   if (node_use_openssl) {
     defines += [ "HAVE_OPENSSL=1" ]
   } else {
@@ -163,11 +169,11 @@ source_set("libnode") {
   configs += [ ":node_internal_config" ]
   public_configs = [
     ":node_external_config",
-    "deps/googletest:gtest_config",
+    "deps/googletest:googletest_config",
   ]
   deps = [
     ":node_js2c",
-    "deps/brotli/c:brotli",
+    "deps/brotli",
     "deps/cares",
     "deps/histogram",
     "deps/llhttp",

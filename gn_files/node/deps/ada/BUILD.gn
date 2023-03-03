@@ -3,13 +3,12 @@
 # found in the LICENSE file.
 
 import("//node/deps/v8/gni/v8.gni")
-import("//node/node.gni")
 
 config("ada_config") {
   include_dirs = [ "." ]
 }
 
-node_dep("ada") {
+source_set("ada") {
   public_configs = [ ":ada_config" ]
   sources = [
     "ada.cpp",

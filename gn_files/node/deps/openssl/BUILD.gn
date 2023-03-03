@@ -18,25 +18,39 @@ declare_args() {
   # Security level as described in
   # https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_security_level.html
   openssl_seclevel = 1
+
+  openssl_modules_dir = "deps/openssl/lib/openssl-modules"
 }
 
-config("external_config") {
-  include_dirs = [ "openssl/include" ]
+config("openssl_external_config") {
+  include_dirs = [
+    "openssl/crypto/include",
+    "openssl/include",
+  ]
 }
 
-config("internal_config") {
-  cflags_c = [
-    "-Wno-implicit-function-declaration",
-    "-Wno-constant-conversion",
-    "-Wno-incompatible-pointer-types",
-    "-Wno-constant-conversion",
+config("openssl_internal_config") {
+  defines = [
+    "OPENSSL_USE_NODELETE",
+    "L_ENDIAN",
+    "OPENSSL_PIC",
+    "OPENSSL_NO_ASM",
+    "OPENSSLDIR=\"$openssl_dir\"",
+    "ENGINESDIR=\"/dev/null\"",
+    "OPENSSL_TLS_SECURITY_LEVEL=$openssl_seclevel",
+    "MODULESDIR=\"$openssl_modules_dir\"",
+    # Compile out hardware engines.  Most are stubs that dynamically load
+    # the real driver but that poses a security liability when an attacker
+    # is able to create a malicious DLL in one of the default search paths.
+    "OPENSSL_NO_HW",
+    "OPENSSL_API_COMPAT=0x10100001L",
+    "STATIC_LEGACY",
   ]
   if (is_posix) {
     asmflags = [ "-fPIC" ]
     cflags = [ "-fPIC" ]
     ldflags = [ "-fPIC" ]
   }
-  cflags_cc = [ "-Wno-sign-compare" ]
   include_dirs = [
     "openssl",
     "openssl/crypto/",
@@ -51,38 +65,23 @@ config("internal_config") {
     "config/archs/linux-x86_64/no-asm/providers/common/include",
     "config",
   ]
+  if (is_clang || !is_win) {
+    cflags_c = [
+      "-Wno-constant-conversion",
+      "-Wno-implicit-function-declaration",
+      "-Wno-sign-compare",
+      "-Wno-unused-function",
+    ]
+  }
   if (is_win) {
     libs = [ "crypt32.lib" ]
+  } else if (is_linux) {
+    libs = [ "atomic" ]
   }
 }
 
-openssl_defines = [
-  "NDEBUG",
-  "OPENSSL_USE_NODELETE",
-  "L_ENDIAN",
-  "OPENSSL_PIC",
-  "OPENSSL_NO_ASM",
-  "OPENSSL_NO_HW",
-  "OPENSSLDIR=\"$openssl_dir\"",
-  "ENGINESDIR=\"/dev/null\"",
-  "OPENSSL_TLS_SECURITY_LEVEL=$openssl_seclevel",
-  "MODULESDIR=\"deps/openssl/lib/openssl-modules\"",
-]
-
-source_set("openssl_crypto_o_str") {
-  # This is a hack to undef _GNU_SOURCE only for openssl/crypto/o_str.c
-  visibility = [ ":openssl" ]
-  sources = [ "openssl/crypto/o_str.c" ]
-  defines = openssl_defines
-  configs += [ ":internal_config", ":external_config" ]
-  cflags = [ "-U_GNU_SOURCE" ]
-}
-
-node_dep("openssl") {
+static_library("openssl") {
+  configs += [ ":openssl_internal_config" ]
+  public_configs = [ ":openssl_external_config" ]
   sources = node_files.openssl_sources
-  sources -= [ "openssl/crypto/o_str.c" ]
-  defines = openssl_defines
-  public_configs = [ ":external_config" ]
-  configs = [ ":internal_config" ]
-  deps = [ ":openssl_crypto_o_str" ]
 }

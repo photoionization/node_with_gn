@@ -1,24 +1,32 @@
 # Copyright (c) 2013-2019 GitHub Inc.
 # Copyright 2019 the V8 project authors. All rights reserved.
+# Copyright 2023 Microsoft Inc.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import("//node/node.gni")
 
-config("external_config") {
-  defines = [ "HTTP_PARSER_STRICT=0" ]
+config("histogram_config") {
   include_dirs = [ "src" ]
 }
 
-config("internal_config") {
-  cflags_c = [
-    "-Wno-implicit-function-declaration",
-    "-Wno-incompatible-pointer-types",
-  ]
-}
+source_set("histogram") {
+  public_configs = [ ":histogram_config" ]
 
-node_dep("histogram") {
-  public_configs = [ ":external_config" ]
-  configs = [ ":internal_config" ]
-  sources = [ "src/hdr_histogram.c" ]
+  if (is_clang || !is_win) {
+    cflags_c = [
+      "-Wno-incompatible-pointer-types",
+      "-Wno-unused-function",
+    ]
+  }
+  if (is_linux) {
+    libs = [ "atomic" ]
+  }
+
+  sources = [
+    "src/hdr_atomic.h",
+    "src/hdr_histogram.c",
+    "src/hdr_histogram.h",
+    "src/hdr_tests.h",
+  ]
 }

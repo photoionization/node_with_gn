@@ -1,18 +1,20 @@
 # Copyright (c) 2013-2019 GitHub Inc.
 # Copyright 2019 the V8 project authors. All rights reserved.
+# Copyright 2023 Microsoft Inc.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node.gni")
+config("uv_external_config") {
+  include_dirs = [ "include" ]
+}
 
-config("libuv_config") {
+config("uv_internal_config") {
   include_dirs = [
     "include",
     "src",
   ]
 
-  defines = []
-
+  defines = [ "BUILDING_UV_SHARED" ]  # always export symbols
   if (is_linux) {
     defines += [
       "_POSIX_C_SOURCE=200112",
@@ -23,10 +25,6 @@ config("libuv_config") {
     defines += [
       "_LARGEFILE_SOURCE",
       "_FILE_OFFSET_BITS=64",
-
-      # This only has an effect on Windows, where it will cause libuv's
-      # symbols to be exported in node.lib
-      "BUILDING_UV_SHARED=1",
     ]
   }
   if (is_mac) {
@@ -35,17 +33,43 @@ config("libuv_config") {
       "_DARWIN_UNLIMITED_SELECT=1",
     ]
   }
+  if (is_clang || !is_win) {
+    cflags_c = [
+      "-Wno-deprecated-declarations",
+      "-Wno-missing-braces",
+      "-Wno-string-conversion",
+      "-Wno-shadow",
+      "-Wno-unused-but-set-variable",
+      "-Wno-unused-function",
+      "-Wno-unused-variable",
+    ]
+  }
 }
 
-node_dep("uv") {
-  # This happens everywhere in libuv code when compiling in debug mode.
-  cflags_c = [
-    "-Wno-string-conversion",
-    "-Wno-shadow"
-  ]
-  public_configs = [ ":libuv_config" ]
-  libs = []
-  ldflags = []
+component("uv") {
+  configs += [ ":uv_internal_config" ]
+  public_configs = [ ":uv_external_config" ]
+
+  if (is_win) {
+    libs = [
+      "advapi32.lib",
+      "iphlpapi.lib",
+      "psapi.lib",
+      "shell32.lib",
+      "user32.lib",
+      "userenv.lib",
+      "ws2_32.lib",
+    ]
+  } else {
+    libs = [ "m" ]
+    ldflags = [ "-pthread" ]
+  }
+  if (is_linux) {
+    libs += [
+      "dl",
+      "rt",
+    ]
+  }
 
   sources = [
     "include/uv.h",
@@ -71,7 +95,6 @@ node_dep("uv") {
     "src/uv-data-getter-setters.c",
     "src/version.c",
   ]
-
   if (is_win) {
     sources += [
       "include/uv/win.h",
@@ -108,15 +131,6 @@ node_dep("uv") {
       "src/win/winsock.c",
       "src/win/winsock.h",
     ]
-    libs += [
-      "advapi32.lib",
-      "iphlpapi.lib",
-      "psapi.lib",
-      "shell32.lib",
-      "user32.lib",
-      "userenv.lib",
-      "ws2_32.lib",
-    ]
   } else {
     sources += [
       "include/uv/aix.h",
@@ -150,8 +164,6 @@ node_dep("uv") {
       "src/unix/tty.c",
       "src/unix/udp.c",
     ]
-    libs += [ "m" ]
-    ldflags += [ "-pthread" ]
   }
   if (is_posix) {
     sources += [ "src/unix/proctitle.c" ]
@@ -173,12 +185,8 @@ node_dep("uv") {
       "src/unix/procfs-exepath.c",
       "src/unix/random-sysctl-linux.c",
     ]
-    libs += [
-      "dl",
-      "rt",
-    ]
   }
-  if (is_mac) {  # is_bsd
+  if (is_mac || target_os == "freebsd") {  # is_bsd
     sources += [
       "src/unix/bsd-ifaddrs.c",
       "src/unix/kqueue.c",
