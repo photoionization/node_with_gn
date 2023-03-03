@@ -47,7 +47,8 @@ declare_args() {
   node_use_code_cache = is_linux
 
   # Use snapshot to speed up startup.
-  node_use_node_snapshot = false
+  # TODO(zcbenz): node_mksnapshot is not ready for cross-os compilation.
+  node_use_node_snapshot = host_os == target_os
 }
 
 assert(!node_use_dtrace, "node_use_dtrace not supported in GN")
@@ -222,6 +223,12 @@ executable("node") {
   if (node_use_node_snapshot) {
     sources += [ "$target_gen_dir/node_snapshot.cc" ]
     deps += [ ":run_node_mksnapshot" ]
+    if (is_clang || !is_win) {
+      cflags_cc = [
+        "-Wno-c++11-narrowing",
+        "-Wno-shadow",
+      ]
+    }
   } else {
     sources += [ "src/node_snapshot_stub.cc" ]
   }
@@ -241,24 +248,18 @@ if (node_use_node_snapshot) {
   }
 
   action("run_node_mksnapshot") {
-    script = "//gn_tools/run_executable_in_dir.py"
-    base = target_gen_dir
-    stamp = "$target_gen_dir/run_node_mksnapshot.stamp"
-    exe = get_label_info(":node_mksnapshot($v8_snapshot_toolchain)",
-                         "root_out_dir") + "/node_mksnapshot"
-    output_cc = "$target_gen_dir/node_snapshot.cc"
-    outputs = [
-      stamp,
-      output_cc,
-    ]
+    deps = [ ":node_mksnapshot($v8_snapshot_toolchain)" ]
+    script = "//node/deps/v8/tools/run.py"
+    sources = []
+    data = []
+
+    mksnapshot_dir = get_label_info(":node_mksnapshot($v8_snapshot_toolchain)",
+                                    "root_out_dir")
+
+    outputs = [ "$target_gen_dir/node_snapshot.cc" ]
     args = [
-      rebase_path(base, root_build_dir),
-      rebase_path(stamp, root_build_dir),
-      rebase_path(exe, base),
-      rebase_path(output_cc, base),
-    ]
-    deps = [
-      ":node_mksnapshot($v8_snapshot_toolchain)",
+      "./" + rebase_path(mksnapshot_dir + "/node_mksnapshot", root_build_dir),
+      rebase_path("$target_gen_dir/node_snapshot.cc", root_build_dir),
     ]
   }
 }
