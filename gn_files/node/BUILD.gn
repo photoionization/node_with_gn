@@ -263,18 +263,9 @@ if (node_use_node_snapshot) {
   }
 }
 
-copy("node_js2c_inputs") {
-  sources = node_files.node_library_files
-  outputs = [
-    "$target_gen_dir/js2c_inputs/{{source_target_relative}}",
-  ]
-}
-
 action("generate_config_gypi") {
   script = "//gn_tools/generate_config_gypi.py"
-  outputs = [
-    "$target_gen_dir/js2c_inputs/config.gypi",
-  ]
+  outputs = [ "$target_gen_dir/config.gypi" ]
   depfile = "$target_gen_dir/$target_name.d"
   script_args = [ "$root_build_dir" ]
   script_args += outputs
@@ -282,29 +273,18 @@ action("generate_config_gypi") {
   args = rebase_path(script_args, root_build_dir)
 }
 
-chdir_action("node_js2c") {
-  deps = [
-    ":generate_config_gypi",
-    ":node_js2c_inputs",
-  ]
-
-  macro_inputs = []
-  config_gypi = [ "$target_gen_dir/js2c_inputs/config.gypi" ]
-
-  # We use a relative path to work around an assertion in js2c.py.
-  config_gypi_relative_path = [ "config.gypi" ]
-
-  library_files = node_files.node_library_files
-  inputs =
-      get_target_outputs(":node_js2c_inputs") +
-      macro_inputs + config_gypi
-  outputs = [
-    "$target_gen_dir/node_javascript.cc",
-  ]
-
-  cwd = "$target_gen_dir/js2c_inputs"
+action("node_js2c") {
   script = "tools/js2c.py"
-  args = [ "--target" ] + rebase_path(outputs)
-  args += library_files
-  args += rebase_path(macro_inputs) + config_gypi_relative_path
+  deps = [ ":generate_config_gypi" ]
+
+  outputs = [ "$target_gen_dir/node_javascript.cc" ]
+  inputs = node_files.node_library_files +
+           node_files.node_deps_files +
+           [ "$target_gen_dir/config.gypi" ]
+
+  args = [ "--target", rebase_path("$target_gen_dir/node_javascript.cc") ] +
+         [ "--directory", rebase_path("lib") ] +
+         [ "--root", rebase_path(".") ] +
+         [ rebase_path("$target_gen_dir/config.gypi") ] +
+         rebase_path(node_files.node_deps_files)
 }

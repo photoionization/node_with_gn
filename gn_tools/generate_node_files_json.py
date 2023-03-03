@@ -84,7 +84,6 @@ if __name__ == '__main__':
   # Find JS lib file and single out files from V8.
   library_files = GypExpandList(node_dir, node_gyp['variables']['library_files'])
   deps_files = node_gyp['variables']['deps_files']
-  library_files += deps_files
 
   # Remove '<@(node_builtin_shareable_builtins)'.
   # We do not support  externally shared js builtins.
@@ -92,12 +91,13 @@ if __name__ == '__main__':
   # TODO(victorgomes): We need a way to get these externally shareable builtins
   # from configure.py. I have a feeling this is still in flux in the NodeJS side,
   # so let's delay this a bit.
-  library_files.remove('<@(node_builtin_shareable_builtins)')
-  library_files.append('deps/cjs-module-lexer/lexer.js')
-  library_files.append('deps/cjs-module-lexer/dist/lexer.js')
-  library_files.append('deps/undici/undici.js')
+  deps_files.remove('<@(node_builtin_shareable_builtins)')
+  deps_files.append('deps/cjs-module-lexer/lexer.js')
+  deps_files.append('deps/cjs-module-lexer/dist/lexer.js')
+  deps_files.append('deps/undici/undici.js')
 
   out['node_library_files'] = library_files
+  out['node_deps_files'] = deps_files
 
   # Find C++ source files.
   node_lib_target = next(

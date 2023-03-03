@@ -17,27 +17,3 @@ template("node_dep") {
     }
   }
 }
-
-template("chdir_action") {
-  action(target_name) {
-    forward_variables_from(invoker,
-                           "*",
-                           [
-                             "script",
-                             "args",
-                           ])
-    assert(defined(cwd), "Need cwd in $target_name")
-    script = "//gn_tools/run_in_dir.py"
-    if (defined(sources)) {
-      sources += [ invoker.script ]
-    } else {
-      assert(defined(inputs))
-      inputs += [ invoker.script ]
-    }
-    args = [
-      rebase_path(cwd),
-      rebase_path(invoker.script),
-    ]
-    args += invoker.args
-  }
-}
