@@ -4,15 +4,18 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node.gni")
-
 config("histogram_config") {
   include_dirs = [ "src" ]
 }
 
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("histogram.gyp") ],
+                          "scope",
+                          [ "histogram.gyp" ])
+
 source_set("histogram") {
   public_configs = [ ":histogram_config" ]
-
+  sources = gypi_values.histogram_sources
   if (is_clang || !is_win) {
     cflags_c = [
       "-Wno-incompatible-pointer-types",
@@ -22,11 +25,4 @@ source_set("histogram") {
   if (is_linux) {
     libs = [ "atomic" ]
   }
-
-  sources = [
-    "src/hdr_atomic.h",
-    "src/hdr_histogram.c",
-    "src/hdr_histogram.h",
-    "src/hdr_tests.h",
-  ]
 }

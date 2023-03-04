@@ -3,14 +3,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node_files.gni")
-
 config("nghttp2_config") {
   include_dirs = [ "lib/includes" ]
   if (!is_component_build) {
     defines = [ "NGHTTP2_STATICLIB" ]
   }
 }
+
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("nghttp2.gyp") ],
+                          "scope",
+                          [ "nghttp2.gyp" ])
 
 component("nghttp2") {
   public_configs = [ ":nghttp2_config" ]
@@ -22,5 +25,5 @@ component("nghttp2") {
     defines += [ "BUILDING_NGHTTP2" ]
   }
 
-  sources = node_files.nghttp2_sources
+  sources = gypi_values.nghttp2_sources
 }

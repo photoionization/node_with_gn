@@ -8,29 +8,14 @@ config("uvwasi_config") {
   include_dirs = [ "include" ]
 }
 
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("uvwasi.gyp") ],
+                          "scope",
+                          [ "uvwasi.gyp" ])
+
 source_set("uvwasi") {
   public_configs = [ ":uvwasi_config" ]
-  deps = [ "//node/deps/uv" ]
-
+  sources = gypi_values.uvwasi_sources
   include_dirs = [ "src" ]
-  sources = [
-    "include/fd_table.h",
-    "include/uv_wasi.h",
-    "include/wasi_types.h",
-    "src/clocks.c",
-    "src/clocks.h",
-    "src/debug.h",
-    "src/fd_table.c",
-    "src/path_resolver.c",
-    "src/path_resolver.h",
-    "src/poll_oneoff.c",
-    "src/poll_oneoff.h",
-    "src/uv_mapping.c",
-    "src/uv_mapping.h",
-    "src/uvwasi_alloc.h",
-    "src/uvwasi.c",
-    "src/wasi_rights.c",
-    "src/wasi_rights.h",
-    "src/wasi_serdes.c",
-  ]
+  deps = [ "../uv" ]
 }

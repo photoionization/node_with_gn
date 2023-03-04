@@ -7,15 +7,18 @@ config("simdutf_config") {
   include_dirs = [ "." ]
 }
 
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("simdutf.gyp") ],
+                          "scope",
+                          [ "simdutf.gyp" ])
+
 source_set("simdutf") {
   public_configs = [ ":simdutf_config" ]
+  sources = gypi_values.simdutf_sources
   if (is_clang || !is_win) {
     cflags_cc = [
       "-Wno-ambiguous-reversed-operator",
+      "-Wno-unused-function",
     ]
   }
-  sources = [
-    "simdutf.cpp",
-    "simdutf.h",
-  ]
 }

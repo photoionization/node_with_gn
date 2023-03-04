@@ -1,25 +1,12 @@
 # Copyright 2019 the V8 project authors. All rights reserved.
+# Copyright 2023 Microsoft Inc.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node_files.gni")
-import("//node/node.gni")
-
 declare_args() {
-  # Defaults for OpenSSL config path.
-  if (is_linux) {
-    openssl_dir = "/etc/ssl/"
-  } else if (is_mac) {
-    openssl_dir = "/System/Library/OpenSSL/"
-  } else {
-    openssl_dir = ""
-  }
-
-  # Security level as described in
-  # https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_security_level.html
-  openssl_seclevel = 1
-
-  openssl_modules_dir = "deps/openssl/lib/openssl-modules"
+  # Do not build optimized assembly for OpenSSL
+  # FIXME(zcbenz): asm code does not compile with clang.
+  openssl_no_asm = true
 }
 
 config("openssl_external_config") {
@@ -31,14 +18,7 @@ config("openssl_external_config") {
 
 config("openssl_internal_config") {
   defines = [
-    "OPENSSL_USE_NODELETE",
-    "L_ENDIAN",
-    "OPENSSL_PIC",
-    "OPENSSL_NO_ASM",
-    "OPENSSLDIR=\"$openssl_dir\"",
-    "ENGINESDIR=\"/dev/null\"",
-    "OPENSSL_TLS_SECURITY_LEVEL=$openssl_seclevel",
-    "MODULESDIR=\"$openssl_modules_dir\"",
+    "MODULESDIR=\"deps/openssl/lib/openssl-modules\"",
     # Compile out hardware engines.  Most are stubs that dynamically load
     # the real driver but that poses a security liability when an attacker
     # is able to create a malicious DLL in one of the default search paths.
@@ -46,25 +26,32 @@ config("openssl_internal_config") {
     "OPENSSL_API_COMPAT=0x10100001L",
     "STATIC_LEGACY",
   ]
+  if (is_win) {
+    defines += [
+      ## default of Win. See INSTALL in openssl repo.
+      "OPENSSLDIR=\"C:\\\Program\ Files\\\Common\ Files\\\SSL\"",
+      "ENGINESDIR=\"NUL\"",
+      "OPENSSL_SYS_WIN32", "WIN32_LEAN_AND_MEAN", "L_ENDIAN",
+      "_CRT_SECURE_NO_DEPRECATE", "UNICODE", "_UNICODE",
+    ]
+  } else if (is_mac) {
+    defines += [
+      "OPENSSLDIR=\"/System/Library/OpenSSL/\"",
+      "ENGINESDIR=\"/dev/null\"",
+    ]
+  } else {
+    defines += [
+      "OPENSSLDIR=\"/etc/ssl\"",
+      "ENGINESDIR=\"/dev/null\"",
+      "TERMIOS",
+    ]
+  }
+
   if (is_posix) {
     asmflags = [ "-fPIC" ]
     cflags = [ "-fPIC" ]
     ldflags = [ "-fPIC" ]
   }
-  include_dirs = [
-    "openssl",
-    "openssl/crypto/",
-    "openssl/crypto/include/",
-    "openssl/crypto/include/internal",
-    "openssl/crypto/modes/",
-    "openssl/crypto/ec/curve448",
-    "openssl/crypto/ec/curve448/arch_32",
-    "openssl/providers/common/include/",
-    "openssl/providers/implementations/include",
-    "config/archs/linux-x86_64/no-asm/crypto",
-    "config/archs/linux-x86_64/no-asm/providers/common/include",
-    "config",
-  ]
   if (is_clang || !is_win) {
     cflags_c = [
       "-Wno-constant-conversion",
@@ -78,10 +65,70 @@ config("openssl_internal_config") {
   } else if (is_linux) {
     libs = [ "atomic" ]
   }
+
+  gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                            [ rebase_path("openssl_common.gypi") ],
+                            "scope",
+                            [ "openssl_common.gypi" ])
+  include_dirs = gypi_values.include_dirs
 }
 
 static_library("openssl") {
   configs += [ ":openssl_internal_config" ]
   public_configs = [ ":openssl_external_config" ]
-  sources = node_files.openssl_sources
+
+  config_path_name = ""
+  if (is_win) {
+    if (target_cpu == "x86") {
+      config_path_name = "VC-WIN32"
+    } else if (target_cpu == "x64") {
+      config_path_name = "VC-WIN64A"
+    } else if (target_cpu == "arm64") {
+      config_path_name = "VC-WIN64-ARM"
+    }
+  } else if (is_linux) {
+    if (target_cpu == "x86") {
+      config_path_name = "linux-elf"
+    } else if (target_cpu == "x64") {
+      config_path_name = "linux-x86_64"
+    } else if (target_cpu == "arm") {
+      config_path_name = "linux-armv4"
+    } else if (target_cpu == "arm64") {
+      config_path_name = "linux-aarch64"
+    }
+  } else if (is_apple) {
+    if (target_cpu == "x86") {
+      config_path_name = "darwin-i386-cc"
+    } else if (target_cpu == "x64") {
+      config_path_name = "darwin64-x86_64-cc"
+    } else if (target_cpu == "arm64") {
+      config_path_name = "darwin64-arm64-cc"
+    }
+  }
+  assert(config_path_name != "", "Unsupported platform")
+
+  # GN variables can not have - in name.
+  config_name = string_replace(config_path_name, "-", "_")
+
+  if (openssl_no_asm) {
+    asm_name = "no-asm"
+  } else {
+    # TODO(zcbenz): Check gas_version and nasm_version.
+    asm_name = "asm_avx2"
+  }
+  if (is_win && target_cpu == "arm64") {
+    asm_name = "no-asm"
+  }
+  config_path = "config/archs/" + config_path_name + "/" + asm_name
+
+  gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                            [ rebase_path(config_path + "/openssl.gypi"), ],
+                            "scope",
+                            [ config_path + "/openssl.gypi" ])
+
+  include_dirs = rebase_path(gypi_values.include_dirs, ".", config_path)
+  defines = gypi_values["openssl_defines_" + config_name]
+  sources = filter_exclude(gypi_values.openssl_sources +
+                           gypi_values["openssl_sources_" + config_name],
+                           [ "*.ld" ])
 }

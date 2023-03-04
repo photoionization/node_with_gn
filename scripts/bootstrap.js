@@ -25,8 +25,6 @@ if (hostOs == 'linux') {
 checkoutNode()
 // Checkout dependencies needed for building V8.
 checkoutDeps()
-// Generate node_files.json.
-execSync('python gn_tools/generate_node_files_json.py')
 
 const commonConfig = [
   `is_clang=${clang}`,

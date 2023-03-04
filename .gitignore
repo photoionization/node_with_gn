@@ -1,8 +1,9 @@
-/node_files.json
 /*.zip
-
-/node
+/debug.log
+/npm-debug.log
 /out/
+
+/node/
 /third_party/gn/
 /third_party/icu/
 /third_party/jinja2/
@@ -11,8 +12,5 @@
 
 .DS_Store
 .tags*
-*.xcodeproj
 *.swp
 *.pyc
-debug.log
-npm-debug.log

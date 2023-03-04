@@ -1,60 +1,12 @@
 # Copyright (c) 2013-2019 GitHub Inc.
 # Copyright 2019 the V8 project authors. All rights reserved.
+# Copyright 2023 Microsoft Inc.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import("//node/deps/v8/gni/snapshot_toolchain.gni")
 import("//node/deps/v8/gni/v8.gni")
-import("//node/node.gni")
-import("//node/node_files.gni")
-
-declare_args() {
-  # Enable the V8 inspector protocol for use with node.
-  node_enable_inspector = true
-
-  # Build node with SSL support.
-  # The variable is called "openssl" for parity with node's GYP build.
-  node_use_openssl = true
-
-  # Use the specified path to system CA (PEM format) in addition to
-  # the BoringSSL supplied CA store or compiled-in Mozilla CA copy.
-  node_openssl_system_ca_path = ""
-
-  # Initialize v8 platform during node.js startup.
-  node_use_v8_platform = true
-
-  # Build with DTrace support.
-  node_use_dtrace = false
-
-  # Build with ETW support.
-  node_use_etw = false
-
-  # Build JavaScript in lib/ with DCHECK macros.
-  node_debug_lib = false
-
-  # Custom build tag.
-  node_tag = ""
-
-  # V8 options to pass, see `node --v8-options` for examples.
-  node_v8_options = ""
-
-  # Provide a custom URL prefix for the `process.release` properties
-  # `sourceUrl` and `headersUrl`. When compiling a release build, this will
-  # default to https://nodejs.org/download/release/').
-  node_release_urlbase = ""
-
-  # Use code cache to speed up startup.
-  node_use_code_cache = is_linux
-
-  # Use snapshot to speed up startup.
-  # TODO(zcbenz): node_mksnapshot is not ready for cross-os compilation.
-  node_use_node_snapshot = host_os == target_os
-}
-
-assert(!node_use_dtrace, "node_use_dtrace not supported in GN")
-assert(!node_use_etw, "node_use_etw not supported in GN")
-assert(!node_enable_inspector || node_use_openssl,
-       "node_enable_inspector requires node_use_openssl")
+import("node.gni")
 
 config("node_features") {
   defines = []
@@ -117,8 +69,8 @@ config("node_internal_config") {
     "-Wno-string-plus-int",
     "-Wno-string-conversion",
     "-Wno-unused-function",
-    "-Wno-extra-semi",  # Temporarily until resolved upstream.
-    "-Wno-unreachable-code", # node_crypto.cc has unreachable code.
+    "-Wno-extra-semi",
+    "-Wno-unreachable-code",
     "-Wno-unreachable-code-break",
     "-Wno-unreachable-code-return",
     "-Wno-shadow",
@@ -166,11 +118,23 @@ config("node_internal_config") {
   }
 }
 
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("node.gyp"),
+                            "--replace=<@(node_builtin_shareable_builtins)=" ],
+                          "scope",
+                          [ "node.gyp" ])
+
 source_set("libnode") {
   configs += [ ":node_internal_config" ]
   public_configs = [
     ":node_external_config",
     "deps/googletest:googletest_config",
+  ]
+  public_deps = [
+    "deps/ada",
+    "deps/uv",
+    "deps/base64",
+    "//node/deps/v8",
   ]
   deps = [
     ":node_js2c",
@@ -186,15 +150,8 @@ source_set("libnode") {
     "//third_party/zlib",
     "//node/deps/v8:v8_libplatform",
   ]
-  public_deps = [
-    "deps/ada",
-    "deps/uv",
-    "deps/base64",
-    "//node/deps/v8",
-  ]
 
-  sources = node_files.node_sources
-  sources += [ "$target_gen_dir/node_javascript.cc" ]
+  sources = gypi_values.node_sources + [ "$target_gen_dir/node_javascript.cc" ]
 
   if (is_win) {
     libs = [ "psapi.lib" ]
@@ -206,14 +163,28 @@ source_set("libnode") {
   if (v8_enable_i18n_support) {
     deps += [ "//third_party/icu" ]
   }
-
-  if (node_enable_inspector) {
-    deps += [ "src/inspector" ]
-  }
-
   if (node_use_openssl) {
     public_deps += [ "deps/openssl" ]
-    sources += node_files.crypto_sources
+    sources += gypi_values.node_crypto_sources
+  }
+  if (node_enable_inspector) {
+    deps += [
+      "src/inspector:node_protocol_generated_sources",
+      "src/inspector:v8_inspector_compress_protocol_json",
+    ]
+    include_dirs = [
+      "$target_gen_dir",
+      "$target_gen_dir/src",
+      "$target_gen_dir/src/inspector",
+    ]
+    node_inspector = exec_script(
+        "//gn_tools/gypi_to_gn.py",
+        [ rebase_path("src/inspector/node_inspector.gypi"),
+          "--replace=<(SHARED_INTERMEDIATE_DIR)=$target_gen_dir" ],
+        "scope",
+        [ "src/inspector/node_inspector.gypi" ])
+    sources += node_inspector.node_inspector_sources +
+               node_inspector.node_inspector_generated_sources
   }
 }
 
@@ -278,14 +249,27 @@ action("node_js2c") {
   script = "tools/js2c.py"
   deps = [ ":generate_config_gypi" ]
 
-  outputs = [ "$target_gen_dir/node_javascript.cc" ]
-  inputs = node_files.node_library_files +
-           node_files.node_deps_files +
+  # TODO(zcbenz): These files are defined in configure.py.
+  node_deps_files = gypi_values.deps_files + [
+    "deps/cjs-module-lexer/lexer.js",
+    "deps/cjs-module-lexer/dist/lexer.js",
+    "deps/undici/undici.js",
+  ]
+
+  node_library_files = exec_script("//gn_tools/search_files.py",
+                                   [ rebase_path(".", root_build_dir),
+                                     rebase_path("lib", root_build_dir),
+                                     "js" ],
+                                   "list lines")
+
+  inputs = node_library_files +
+           node_deps_files +
            [ "$target_gen_dir/config.gypi" ]
+  outputs = [ "$target_gen_dir/node_javascript.cc" ]
 
   args = [ "--target", rebase_path("$target_gen_dir/node_javascript.cc") ] +
          [ "--directory", rebase_path("lib") ] +
          [ "--root", rebase_path(".") ] +
          [ rebase_path("$target_gen_dir/config.gypi") ] +
-         rebase_path(node_files.node_deps_files)
+         rebase_path(node_deps_files)
 }

@@ -7,13 +7,13 @@ config("llhttp_config") {
   include_dirs = [ "include" ]
 }
 
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("llhttp.gyp") ],
+                          "scope",
+                          [ "llhttp.gyp" ])
+
 source_set("llhttp") {
   public_configs = [ ":llhttp_config" ]
   include_dirs = [ "include" ]
-  sources = [
-    "include/llhttp.h",
-    "src/api.c",
-    "src/http.c",
-    "src/llhttp.c",
-  ]
+  sources = gypi_values.llhttp_sources
 }

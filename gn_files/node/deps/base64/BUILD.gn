@@ -4,8 +4,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node_files.gni")
-
 config("base64_external_config") {
   include_dirs = [ "base64/include" ]
   if (!is_component_build) {
@@ -37,10 +35,15 @@ config("base64_internal_config") {
   }
 }
 
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("base64.gyp") ],
+                          "scope",
+                          [ "base64.gyp" ])
+
 component("base64") {
   configs += [ ":base64_internal_config" ]
   public_configs = [ ":base64_external_config" ]
-  sources = node_files.base64_sources
+  sources = gypi_values.base64_sources_common
   deps = [
     ":base64_ssse3",
     ":base64_sse41",

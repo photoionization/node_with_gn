@@ -4,14 +4,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/node_files.gni")
-
 config("cares_config") {
   include_dirs = [ "include" ]
   if (!is_component_build) {
     defines = [ "CARES_STATICLIB" ]
   }
 }
+
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("cares.gyp") ],
+                          "scope",
+                          [ "cares.gyp" ])
 
 component("cares") {
   public_configs = [ ":cares_config" ]
@@ -22,7 +25,8 @@ component("cares") {
   }
   if (is_win) {
     defines += [ "CARES_PULL_WS2TCPIP_H=1" ]
-  } else {
+  }
+  if (is_posix) {
     defines += [
       "_DARWIN_USE_64_BIT_INODE=1",
       "_LARGEFILE_SOURCE",
@@ -48,15 +52,9 @@ component("cares") {
     ]
   }
 
-  sources = node_files.cares_sources
+  sources = gypi_values.cares_sources_common
   if (is_win) {
-    sources += [
-      "src/lib/ares_getenv.c",
-      "src/lib/ares_iphlpapi.h",
-      "src/lib/ares_platform.c",
-      "src/lib/config-win32.h",
-      "src/lib/windows_port.c",
-    ]
+    sources += gypi_values.cares_sources_win
   }
   if (is_linux) {
     sources += [ "config/linux/ares_config.h" ]

@@ -3,6 +3,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//node/node.gni")
+
 config("ngtcp2_config") {
   include_dirs = [
     "nghttp3/lib/",
@@ -15,6 +17,11 @@ config("ngtcp2_config") {
     "NGHTTP3_STATICLIB",
   ]
 }
+
+gypi_values = exec_script("//gn_tools/gypi_to_gn.py",
+                          [ rebase_path("ngtcp2.gyp") ],
+                          "scope",
+                          [ "ngtcp2.gyp" ])
 
 # FIXME(zcbenz): Some APIs of ngtcp2 are not marked as export, so can not turn
 # into component. This should be fixed in upstream ngtcp2
@@ -43,58 +50,9 @@ static_library("ngtcp2") {
     "nghttp3/lib/"
   ]
 
-  sources = [
-    "nghttp3/lib/nghttp3_buf.c",
-    "nghttp3/lib/nghttp3_conn.c",
-    "nghttp3/lib/nghttp3_conv.c",
-    "nghttp3/lib/nghttp3_debug.c",
-    "nghttp3/lib/nghttp3_err.c",
-    "nghttp3/lib/nghttp3_frame.c",
-    "nghttp3/lib/nghttp3_gaptr.c",
-    "nghttp3/lib/nghttp3_http.c",
-    "nghttp3/lib/nghttp3_idtr.c",
-    "nghttp3/lib/nghttp3_ksl.c",
-    "nghttp3/lib/nghttp3_map.c",
-    "nghttp3/lib/nghttp3_mem.c",
-    "nghttp3/lib/nghttp3_pq.c",
-    "nghttp3/lib/nghttp3_qpack.c",
-    "nghttp3/lib/nghttp3_qpack_huffman.c",
-    "nghttp3/lib/nghttp3_qpack_huffman_data.c",
-    "nghttp3/lib/nghttp3_range.c",
-    "nghttp3/lib/nghttp3_rcbuf.c",
-    "nghttp3/lib/nghttp3_str.c",
-    "nghttp3/lib/nghttp3_stream.c",
-    "nghttp3/lib/nghttp3_tnode.c",
-    "nghttp3/lib/nghttp3_vec.c",
-    "nghttp3/lib/nghttp3_version.c",
-    "ngtcp2/lib/ngtcp2_acktr.c",
-    "ngtcp2/lib/ngtcp2_addr.c",
-    "ngtcp2/lib/ngtcp2_buf.c",
-    "ngtcp2/lib/ngtcp2_cc.c",
-    "ngtcp2/lib/ngtcp2_cid.c",
-    "ngtcp2/lib/ngtcp2_conn.c",
-    "ngtcp2/lib/ngtcp2_conv.c",
-    "ngtcp2/lib/ngtcp2_crypto.c",
-    "ngtcp2/lib/ngtcp2_err.c",
-    "ngtcp2/lib/ngtcp2_gaptr.c",
-    "ngtcp2/lib/ngtcp2_idtr.c",
-    "ngtcp2/lib/ngtcp2_ksl.c",
-    "ngtcp2/lib/ngtcp2_log.c",
-    "ngtcp2/lib/ngtcp2_map.c",
-    "ngtcp2/lib/ngtcp2_mem.c",
-    "ngtcp2/lib/ngtcp2_path.c",
-    "ngtcp2/lib/ngtcp2_pkt.c",
-    "ngtcp2/lib/ngtcp2_ppe.c",
-    "ngtcp2/lib/ngtcp2_pq.c",
-    "ngtcp2/lib/ngtcp2_pv.c",
-    "ngtcp2/lib/ngtcp2_qlog.c",
-    "ngtcp2/lib/ngtcp2_range.c",
-    "ngtcp2/lib/ngtcp2_rob.c",
-    "ngtcp2/lib/ngtcp2_rst.c",
-    "ngtcp2/lib/ngtcp2_rtb.c",
-    "ngtcp2/lib/ngtcp2_str.c",
-    "ngtcp2/lib/ngtcp2_strm.c",
-    "ngtcp2/lib/ngtcp2_vec.c",
-    "ngtcp2/lib/ngtcp2_version.c",
-  ]
+  sources = gypi_values.nghttp3_sources + gypi_values.ngtcp2_sources
+  if (node_use_openssl) {
+    sources += gypi_values.ngtcp2_sources_openssl
+    deps = [ "../openssl" ]
+  }
 }
