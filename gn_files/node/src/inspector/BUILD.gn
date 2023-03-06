@@ -4,7 +4,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/deps/v8/gni/v8.gni")
+import("../../node.gni")
+import("$node_v8_path/gni/v8.gni")
 
 group("inspector") {
   deps = [
@@ -71,14 +72,14 @@ action("concatenate_protocols") {
 }
 
 action("node_protocol_json") {
-  script = "//node/deps/v8/third_party/inspector_protocol/convert_protocol_to_json.py"
+  script = "$node_v8_path/third_party/inspector_protocol/convert_protocol_to_json.py"
   inputs = [ "node_protocol.pdl" ]
   outputs = [ "$node_gen_dir/src/node_protocol.json" ]
   args = rebase_path(inputs + outputs, root_build_dir)
 }
 
 action("v8_protocol_json") {
-  script = "//node/deps/v8/third_party/inspector_protocol/convert_protocol_to_json.py"
+  script = "$node_v8_path/third_party/inspector_protocol/convert_protocol_to_json.py"
   inputs = [ v8_inspector_js_protocol ]
   outputs = [ "$node_gen_dir/src/js_protocol.json" ]
   args = rebase_path(inputs + outputs, root_build_dir)

@@ -4,9 +4,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//node/deps/v8/gni/snapshot_toolchain.gni")
-import("//node/deps/v8/gni/v8.gni")
 import("node.gni")
+import("$node_v8_path/gni/snapshot_toolchain.gni")
+import("$node_v8_path/gni/v8.gni")
 
 config("node_features") {
   defines = []
@@ -46,7 +46,7 @@ config("node_external_config") {
   defines = [ "NODE_WANT_INTERNALS=1" ]
   configs = [
     ":node_features",
-    "//node/deps/v8:external_config",
+    "$node_v8_path:external_config",
   ]
 }
 
@@ -134,7 +134,7 @@ source_set("libnode") {
     "deps/ada",
     "deps/uv",
     "deps/base64",
-    "//node/deps/v8",
+    "$node_v8_path",
   ]
   deps = [
     ":node_js2c",
@@ -148,7 +148,7 @@ source_set("libnode") {
     "deps/simdutf",
     "deps/uvwasi",
     "//third_party/zlib",
-    "//node/deps/v8:v8_libplatform",
+    "$node_v8_path:v8_libplatform",
   ]
 
   sources = gypi_values.node_sources + [ "$target_gen_dir/node_javascript.cc" ]
@@ -220,7 +220,7 @@ if (node_use_node_snapshot) {
 
   action("run_node_mksnapshot") {
     deps = [ ":node_mksnapshot($v8_snapshot_toolchain)" ]
-    script = "//node/deps/v8/tools/run.py"
+    script = "$node_v8_path/tools/run.py"
     sources = []
     data = []
 

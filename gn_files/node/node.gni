@@ -1,7 +1,15 @@
 # Copyright 2019 the V8 project authors. All rights reserved.
+# Copyright 2023 Microsoft Inc.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# Embedder options.
+declare_args() {
+  # The location of V8, use the one from node's deps by default.
+  node_v8_path = "//node/deps/v8"
+}
+
+# Equivalent of gyp file's configurations.
 declare_args() {
   # Enable the V8 inspector protocol for use with node.
   node_enable_inspector = true
@@ -16,15 +24,6 @@ declare_args() {
 
   # Initialize v8 platform during node.js startup.
   node_use_v8_platform = true
-
-  # Build with DTrace support.
-  node_use_dtrace = false
-
-  # Build with ETW support.
-  node_use_etw = false
-
-  # Build JavaScript in lib/ with DCHECK macros.
-  node_debug_lib = false
 
   # Custom build tag.
   node_tag = ""
@@ -45,23 +44,5 @@ declare_args() {
   node_use_node_snapshot = host_os == target_os
 }
 
-assert(!node_use_dtrace, "node_use_dtrace not supported in GN")
-assert(!node_use_etw, "node_use_etw not supported in GN")
 assert(!node_enable_inspector || node_use_openssl,
        "node_enable_inspector requires node_use_openssl")
-
-template("node_dep") {
-  static_library(target_name) {
-    forward_variables_from(invoker, "*", ["configs", "remove_configs"])
-    if (defined(invoker.configs)) {
-      configs += invoker.configs
-    }
-    if (is_posix) {
-      configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
-      configs += [ "//build/config/gcc:symbol_visibility_default" ]
-    }
-    if (defined(invoker.remove_configs)) {
-      configs -= invoker.remove_configs
-    }
-  }
-}
