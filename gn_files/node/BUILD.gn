@@ -268,8 +268,8 @@ action("node_js2c") {
   outputs = [ "$target_gen_dir/node_javascript.cc" ]
 
   args = [ "--target", rebase_path("$target_gen_dir/node_javascript.cc") ] +
-         [ "--directory", rebase_path("lib") ] +
+         [ "--directory", "lib" ] +
          [ "--root", rebase_path(".") ] +
          [ rebase_path("$target_gen_dir/config.gypi") ] +
-         rebase_path(node_deps_files)
+         node_deps_files
 }
