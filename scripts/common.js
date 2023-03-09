@@ -32,6 +32,7 @@ const hostOs = targetOs
 // Get target_cpu from args.gn.
 let targetCpu = 'x64'
 let clang = true
+let goma = false
 if (fs.existsSync('out/Release/args.gn')) {
   const content = String(fs.readFileSync('out/Release/args.gn'))
   const matchCpu = content.match(/target_cpu = "(.*)"/)
@@ -40,10 +41,8 @@ if (fs.existsSync('out/Release/args.gn')) {
   const matchOs = content.match(/target_os = "(.*)"/)
   if (matchOs && matchOs.length > 1)
     targetOs = matchOs[1]
-  if (content.includes('is_clang = true'))
-    clang = true
-  else
-    clang = false
+  clang = content.includes('is_clang = true')
+  goma = content.includes('use_goma = true') || content.includes('goma.gn')
 }
 
 let hostCpu = process.arch
@@ -108,6 +107,7 @@ module.exports = {
   verbose,
   version,
   clang,
+  goma,
   argv,
   targetCpu,
   targetOs,

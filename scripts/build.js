@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {argv, verbose, execSync} = require('./common')
+const {argv, goma, verbose, execSync} = require('./common')
 
 let dir = 'out/Release'
 const args = argv.filter((arg) => {
@@ -12,4 +12,9 @@ const args = argv.filter((arg) => {
   }
 })
 
-execSync(`ninja ${verbose ? '-v' : ''} -C ${dir} ${args.join(' ')}`)
+if (goma)
+  args.push('-j 200')
+if (verbose)
+  args.push('-v')
+
+execSync(`ninja -C ${dir} ${args.join(' ')}`)
