@@ -51,6 +51,10 @@ const releaseConfig = [
   'is_debug=false',
   'is_official_build=true',
 ]
+if (clang) {
+  // Setting up system libc++ that builds well with Node/V8's C++ code is hard.
+  commonConfig.push('use_custom_libcxx=true')
+}
 if (hostOs == 'mac') {
   // Default xcode clang is not supported for building v8.
   commonConfig.push('use_xcode_clang=false')
@@ -60,8 +64,7 @@ if (hostOs == 'mac') {
 }
 if (hostOs == 'linux') {
   // Ensure stable environment.
-  commonConfig.push('use_sysroot=true',
-                    'use_custom_libcxx=true')
+  commonConfig.push('use_sysroot=true')
 }
 for (const arg of argv) {
   if (arg == '--ccache' && hostOs != 'win')
