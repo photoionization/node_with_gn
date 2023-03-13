@@ -5,11 +5,9 @@ Scripts and GN configurations to build Node.js with GN.
 ## How to use
 
 First run bootstrap Scripts to download Node.js and its dependencies:
-(Currently checking out my fork because a few required changes are still being
-reviewed in upstream.)
 
 ```
-./scripts/bootstrap.js --node-repo=https://github.com/zcbenz/node --node-commit=patch-6
+./scripts/bootstrap.js
 ```
 
 Then start building:

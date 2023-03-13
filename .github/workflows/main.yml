@@ -54,7 +54,7 @@ jobs:
 
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=https://github.com/zcbenz/node --node-commit=patch-6
+          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }}
           node scripts/build.js
 
   vs-toolchain:
@@ -79,8 +79,14 @@ jobs:
         run: |
           # GitHub limits where cache is accessible, we don't want to create
           # vs toolchain for every branch so force creating one on main branch.
-          if (${env:GITHUB_BASE_REF} -ne 'main') {
+          if (${env:GITHUB_BASE_REF}) {
+            $env:GIT_BRANCH = ${env:GITHUB_BASE_REF}
+          } else {
+            $env:GIT_BRANCH = ${env:GITHUB_REF} -replace '^refs/heads/', ''
+          }
+          if (${env:GIT_BRANCH} -ne 'main') {
             Write-Output 'Can not create vs-toolchain in a sub-branch, please re-run the main branch job.'
+            Write-Output "The value of GIT_BRANCH is: ${env:GIT_BRANCH}."
             Exit 1
           }
 
