@@ -35,7 +35,6 @@ const commonConfig = [
   'v8_use_external_startup_data=false',
   'v8_enable_javascript_promise_hooks=true',
   // Not our job fixing the warnings.
-  'treat_warnings_as_errors=false',
   'clang_use_chrome_plugins=false',
 ]
 const componentConfig = [

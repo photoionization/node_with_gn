@@ -1,6 +1,6 @@
 # node_with_gn
 
-Scripts and GN configurations to build Node.js with GN.
+Scripts to build Node.js with GN.
 
 ## How to use
 

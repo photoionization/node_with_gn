@@ -54,7 +54,7 @@ jobs:
 
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }}
+          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=https://github.com/zcbenz/node --node-commit=patch-gn-2
           node scripts/build.js
 
   vs-toolchain:
