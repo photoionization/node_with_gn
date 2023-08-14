@@ -43,6 +43,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Maximize Build Space
+        if: matrix.targetOs == 'win'
+        uses: hirnidrin/free-disk-space@main
+
       - name: Get Windows SDK
         if: matrix.targetOs == 'win'
         uses: actions/cache/restore@v3
