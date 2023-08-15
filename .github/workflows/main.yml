@@ -61,6 +61,13 @@ jobs:
           node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=https://github.com/zcbenz/node --node-commit=patch-gn-2
           node scripts/build.js
 
+      - name: Run Tests
+        if: matrix.arch == 'x64' && (matrix.targetOs == 'linux' || matrix.targetOs == 'mac')
+        run: |
+          node scripts/build.js node_cctest
+          cd node
+          ../out/Release/node_cctest
+
   vs-toolchain:
     runs-on: windows-2022
     continue-on-error: false
