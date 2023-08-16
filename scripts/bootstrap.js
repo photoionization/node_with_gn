@@ -34,6 +34,8 @@ const commonConfig = [
   'v8_enable_sandbox=false',
   'v8_use_external_startup_data=false',
   'v8_enable_javascript_promise_hooks=true',
+  'v8_promise_internal_field_count=1',
+  'v8_scriptormodule_legacy_lifetime=true',
   // Not our job fixing the warnings.
   'clang_use_chrome_plugins=false',
 ]
@@ -64,6 +66,13 @@ if (hostOs == 'mac') {
 if (hostOs == 'linux') {
   // Ensure stable environment.
   commonConfig.push('use_sysroot=true')
+}
+if (targetOs == 'win' && targetCpu.endsWith('64')) {
+  // TODO(zcbenz): The icu_use_data_file should be false to make ICU work to
+  // node, but it is currently causing linking errors in win 64bit build.
+  commonConfig.push('icu_use_data_file=true')
+} else {
+  commonConfig.push('icu_use_data_file=false')
 }
 for (const arg of argv) {
   if (arg == '--ccache' && hostOs != 'win')
