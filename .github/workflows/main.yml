@@ -23,6 +23,10 @@ jobs:
             arch: x86
 
     steps:
+      - name: Prepare to Install Linux Dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt update
+
       - name: Install Linux Dependencies
         if: runner.os == 'Linux' && matrix.targetOs == 'win'
         # Needed for running ciopfs, used when setup vs toolchain.

@@ -36,6 +36,7 @@ const commonConfig = [
   'v8_enable_javascript_promise_hooks=true',
   'v8_promise_internal_field_count=1',
   'v8_scriptormodule_legacy_lifetime=true',
+  'v8_enable_maglev=false',
   // Not our job fixing the warnings.
   'clang_use_chrome_plugins=false',
 ]
