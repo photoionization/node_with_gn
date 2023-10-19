@@ -106,10 +106,11 @@ function checkoutNode() {
 
 function checkoutDeps() {
   const deps = {
+    "abseil-cpp": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp",
     "icu": "https://chromium.googlesource.com/chromium/deps/icu",
-    "zlib": "https://chromium.googlesource.com/chromium/src/third_party/zlib",
     "jinja2": "https://chromium.googlesource.com/chromium/src/third_party/jinja2",
-    "markupsafe": "https://chromium.googlesource.com/chromium/src/third_party/markupsafe"
+    "markupsafe": "https://chromium.googlesource.com/chromium/src/third_party/markupsafe",
+    "zlib": "https://chromium.googlesource.com/chromium/src/third_party/zlib",
   }
   for (const name in deps) {
     if (fs.existsSync(`third_party/${name}`))

@@ -4,6 +4,7 @@
 /out/
 
 /node/
+/third_party/abseil-cpp/
 /third_party/gn/
 /third_party/icu/
 /third_party/jinja2/
