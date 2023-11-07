@@ -73,7 +73,7 @@ jobs:
           ../out/Release/node_cctest
           ../out/Release/node test/embedding/test-embedding.js
           # TODO(zcbenz): Fix the tests.
-          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-process-config,parallel/test-process-versions,parallel/test-snapshot-basic,test/parallel/test-v8-serialize-leak,sequential/test-watch-mode-inspect
+          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-process-versions,parallel/test-snapshot-basic
 
   vs-toolchain:
     runs-on: windows-2022
