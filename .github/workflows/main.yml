@@ -72,8 +72,10 @@ jobs:
           cd node
           ../out/Release/node_cctest
           ../out/Release/node test/embedding/test-embedding.js
-          # TODO(zcbenz): Fix the tests.
-          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-process-versions,parallel/test-snapshot-basic
+          # TODO(zcbenz): The parallel/test-crypto-no-algorithm test is failing,
+          # which was introduced by https://github.com/nodejs/node/pull/46237, I
+          # don't have enough experience with OpenSSL to fix it.
+          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm
 
   vs-toolchain:
     runs-on: windows-2022

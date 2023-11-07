@@ -37,6 +37,9 @@ const commonConfig = [
   'v8_promise_internal_field_count=1',
   'v8_scriptormodule_legacy_lifetime=true',
   'v8_enable_maglev=false',
+  // TODO(zcbenz): Node.js manually updates this value in common.gypi, we should
+  // find out a better procedure without manual updating source code.
+  'v8_embedder_string="-node.0"',
   // Not our job fixing the warnings.
   'clang_use_chrome_plugins=false',
 ]
