@@ -1,6 +1,9 @@
 name: node
 
-on: push
+on:
+  push:
+  schedule:
+    - cron: '0 21 * * *'
 
 env:
   WIN_SDK_VERSION: 22621
@@ -62,7 +65,7 @@ jobs:
 
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=https://github.com/zcbenz/node --node-commit=fix-base64-gn-config
+          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=https://github.com/zcbenz/node --node-commit=fix-base64-gn-config-2
           node scripts/build.js
 
       - name: Run Tests
@@ -129,3 +132,12 @@ jobs:
           path: '*.zip'
           key: vs-toolchain-${{ env.WIN_SDK_VERSION }}
           enableCrossOsArchive: true
+
+  notify-build-failure:
+    needs: [build]
+    if: failure() && github.event.schedule != null
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jayqi/failed-build-issue-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
