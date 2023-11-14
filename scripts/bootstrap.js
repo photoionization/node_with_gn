@@ -31,6 +31,7 @@ const commonConfig = [
   `target_cpu="${targetCpu}"`,
   `target_os="${targetOs}"`,
   // V8 settings required by Node.
+  'v8_expose_symbols=true',
   'v8_enable_sandbox=false',
   'v8_use_external_startup_data=false',
   'v8_enable_javascript_promise_hooks=true',
