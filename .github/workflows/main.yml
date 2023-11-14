@@ -84,6 +84,8 @@ jobs:
           cd node
           ../out/Release/node_cctest
           ../out/Release/node test/embedding/test-embedding.js
+          ./tools/test.py --shell ../out/Release/node js-native-api
+          ./tools/test.py --shell ../out/Release/node node-api
           # TODO(zcbenz): The parallel/test-crypto-no-algorithm test is failing,
           # which was introduced by https://github.com/nodejs/node/pull/46237, I
           # don't have enough experience with OpenSSL to fix it.
