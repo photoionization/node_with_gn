@@ -146,6 +146,8 @@ jobs:
   notify-build-failure:
     needs: [build]
     if: failure() && github.event.schedule != null
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - uses: jayqi/failed-build-issue-action@v1
