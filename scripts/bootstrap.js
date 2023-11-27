@@ -64,9 +64,6 @@ if (clang) {
 if (hostOs == 'mac') {
   // Default xcode clang is not supported for building v8.
   commonConfig.push('use_xcode_clang=false')
-  // The node/deps/ada uses to_chars which is not available until 10.15.
-  commonConfig.push('mac_deployment_target="10.15"',
-                    'mac_min_system_version="10.15"')
 }
 if (hostOs == 'linux') {
   // Ensure stable environment.
