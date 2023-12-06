@@ -31,6 +31,7 @@ const commonConfig = [
   `target_cpu="${targetCpu}"`,
   `target_os="${targetOs}"`,
   // V8 settings required by Node.
+  'icu_use_data_file=false',
   'v8_expose_symbols=true',
   'v8_enable_sandbox=false',
   'v8_use_external_startup_data=false',
@@ -71,13 +72,6 @@ if (hostOs == 'mac') {
 if (hostOs == 'linux') {
   // Ensure stable environment.
   commonConfig.push('use_sysroot=true')
-}
-if (targetOs == 'win' && targetCpu.endsWith('64')) {
-  // TODO(zcbenz): The icu_use_data_file should be false to make ICU work to
-  // node, but it is currently causing linking errors in win 64bit build.
-  commonConfig.push('icu_use_data_file=true')
-} else {
-  commonConfig.push('icu_use_data_file=false')
 }
 for (const arg of argv) {
   if (arg == '--ccache' && hostOs != 'win')
