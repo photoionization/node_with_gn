@@ -61,9 +61,16 @@ jobs:
           fail-on-cache-miss: true
           enableCrossOsArchive: true
 
+      - name: Setup GOMA
+        shell: bash
+        env:
+          SECRET_FILE_CONTENT: ${{ secrets.GOMA_OAUTH2_CONFIG }}
+        run: |
+          printf "$SECRET_FILE_CONTENT" > ~/.goma_oauth2_config
+
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }}
+          node scripts/bootstrap.js --goma --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }}
           node scripts/build.js
 
       - name: Run Tests

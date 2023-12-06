@@ -3,6 +3,7 @@
 const {argv, clang, hostCpu, hostOs, targetCpu, targetOs, execSync, spawnSync} = require('./common')
 
 const fs = require('fs')
+const path = require('path')
 
 // Download GN.
 execSync('node scripts/download_gn.js')
@@ -74,10 +75,12 @@ if (hostOs == 'linux') {
   commonConfig.push('use_sysroot=true')
 }
 for (const arg of argv) {
-  if (arg == '--ccache' && hostOs != 'win')
-    commonConfig.push('cc_wrapper="ccache"')
-  else if (arg.startsWith('--extra-args='))
+  if (arg == '--goma') {
+    execSync('node scripts/goma.js')
+    commonConfig.push(`import("${path.resolve(__dirname, '../third_party/build-tools/')}/third_party/goma.gn")`)
+  } else if (arg.startsWith('--extra-args=')) {
     commonConfig.push(...arg.substr(arg.indexOf('=') + 1).split(' '))
+  }
 }
 
 gen('out/Component', componentConfig)
@@ -105,6 +108,7 @@ function checkoutNode() {
 function checkoutDeps() {
   const deps = {
     "abseil-cpp": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp",
+    "build-tools": "https://github.com/electron/build-tools",
     "icu": "https://chromium.googlesource.com/chromium/deps/icu",
     "jinja2": "https://chromium.googlesource.com/chromium/src/third_party/jinja2",
     "markupsafe": "https://chromium.googlesource.com/chromium/src/third_party/markupsafe",
