@@ -64,6 +64,9 @@ if (clang) {
 if (hostOs == 'mac') {
   // Default xcode clang is not supported for building v8.
   commonConfig.push('use_xcode_clang=false')
+  // Node.js requires macOS 11 and later.
+  commonConfig.push('mac_deployment_target="11.0"')
+  commonConfig.push('mac_min_system_version="11.0"')
 }
 if (hostOs == 'linux') {
   // Ensure stable environment.
