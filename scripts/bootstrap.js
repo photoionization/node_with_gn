@@ -109,7 +109,7 @@ function checkoutDeps() {
   const deps = {
     "abseil-cpp": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp",
     "build-tools": "https://github.com/electron/build-tools",
-    "icu": "https://chromium.googlesource.com/chromium/deps/icu",
+    "icu": "https://github.com/zcbenz/icu.git",
     "jinja2": "https://chromium.googlesource.com/chromium/src/third_party/jinja2",
     "markupsafe": "https://chromium.googlesource.com/chromium/src/third_party/markupsafe",
     "zlib": "https://chromium.googlesource.com/chromium/src/third_party/zlib",
