@@ -80,10 +80,18 @@ jobs:
           # Build tests.
           node scripts/build.js node_cctest node_embedtest overlapped_checker
 
+          # Build native addons used for testing.
+          BUILD_ADDONS_ARGS="--config-gypi-path=`pwd`/out/Release/gen/node/config.gypi --root-dir=`pwd`/node"
+          python node/tools/build_addons.py node/test/addons --skip-tests=openssl-client-cert-engine,openssl-key-engine,openssl-test-engine $BUILD_ADDONS_ARGS
+          python node/tools/build_addons.py node/test/node-api $BUILD_ADDONS_ARGS
+          python node/tools/build_addons.py node/test/js-native-api $BUILD_ADDONS_ARGS
+
           # Run tests.
           cd node
           ../out/Release/node_cctest
           ../out/Release/node test/embedding/test-embedding.js
+          ./tools/test.py --shell ../out/Release/node js-native-api
+          ./tools/test.py --shell ../out/Release/node node-api
           # TODO(zcbenz): Disabled tests:
           # parallel/test-crypto-no-algorithm
           # broken by https://github.com/nodejs/node/pull/46237
