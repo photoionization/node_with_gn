@@ -29,6 +29,7 @@ checkoutDeps()
 
 const commonConfig = [
   `is_clang=${clang}`,
+  `host_cpu="${hostCpu}"`,
   `target_cpu="${targetCpu}"`,
   `target_os="${targetOs}"`,
   // V8 settings required by Node.
