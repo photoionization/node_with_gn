@@ -3,6 +3,15 @@ name: node
 on:
   push:
   workflow_dispatch:
+    inputs:
+      repo:
+        description: The URL of Node.js repo
+        required: false
+        type: string
+      commit:
+        description: Which Node.js commit or branch to build
+        required: false
+        type: string
   schedule:
     - cron: '0 21 * * *'
 
@@ -64,7 +73,7 @@ jobs:
 
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }}
+          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=${{ inputs.repo || 'https://github.com/nodejs/node' }} --node-commit=${{ inputs.commit || '' }}
           node scripts/build.js
 
       - name: Run Tests
