@@ -56,7 +56,9 @@ jobs:
           python-version: '3.11'
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Maximize Build Space
         if: matrix.targetOs == 'win'
