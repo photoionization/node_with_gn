@@ -101,7 +101,9 @@ jobs:
           # broken by https://github.com/nodejs/node/pull/46237
           # parallel/test-worker-nearheaplimit-deadlock
           # broken by https://github.com/nodejs/node/pull/51598
-          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-worker-nearheaplimit-deadlock
+          # wasm-allocation
+          # added by https://github.com/nodejs/node/pull/52766
+          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-worker-nearheaplimit-deadlock,wasm-allocation
 
   vs-toolchain:
     runs-on: windows-2022
