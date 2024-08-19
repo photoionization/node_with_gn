@@ -64,6 +64,11 @@ jobs:
         if: matrix.targetOs == 'win'
         uses: hirnidrin/free-disk-space@main
 
+      - name: Use ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: v0-${{ matrix.targetOs }}-${{ matrix.arch }}
+
       - name: Get Windows SDK
         if: matrix.targetOs == 'win'
         uses: actions/cache/restore@v3
@@ -75,7 +80,7 @@ jobs:
 
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} --node-repo=${{ inputs.repo || 'https://github.com/nodejs/node' }} --node-commit=${{ inputs.commit || '' }}
+          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} '--extra-args=cc_wrapper="ccache"' --node-repo=${{ inputs.repo || 'https://github.com/nodejs/node' }} --node-commit=${{ inputs.commit || '' }}
           node scripts/build.js
 
       - name: Run Tests
