@@ -29,9 +29,6 @@ jobs:
       matrix:
         targetOs: [linux, mac, win]
         arch: [x64, arm64]
-        include:
-          - targetOs: linux
-            arch: x86
 
     steps:
       - name: Prepare to Install Linux Dependencies
