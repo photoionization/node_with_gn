@@ -44,6 +44,7 @@ const commonConfig = [
   'v8_scriptormodule_legacy_lifetime=true',
   'v8_enable_maglev=false',
   'v8_enable_fuzztest=false',
+  'v8_imminent_deprecation_warnings=false',
   // TODO(zcbenz): Node.js manually updates this value in common.gypi, we should
   // find out a better procedure without manual updating source code.
   'v8_embedder_string="-node.0"',
