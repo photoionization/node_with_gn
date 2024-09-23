@@ -21,13 +21,18 @@ env:
 jobs:
   build:
     needs: [vs-toolchain]
-    runs-on: ${{ fromJson('{"linux":"ubuntu-22.04","mac":"macos-13","win":"ubuntu-22.04"}')[matrix.targetOs] }}
+    runs-on: >-
+      ${{
+        (matrix.os == 'mac' && matrix.arch == 'arm64') &&
+          'macos-14' ||
+          (fromJson('{"linux":"ubuntu-22.04","mac":"macos-13","win":"ubuntu-22.04"}')[matrix.os])
+      }}
     continue-on-error: false
 
     strategy:
       fail-fast: false
       matrix:
-        targetOs: [linux, mac, win]
+        os: [linux, mac, win]
         arch: [x64, arm64]
 
     steps:
@@ -36,7 +41,7 @@ jobs:
         run: sudo apt update
 
       - name: Install Linux Dependencies
-        if: runner.os == 'Linux' && matrix.targetOs == 'win'
+        if: runner.os == 'Linux' && matrix.os == 'win'
         # Needed for running ciopfs, used when setup vs toolchain.
         run: sudo apt install -y fuse
 
@@ -45,7 +50,7 @@ jobs:
         run: sudo apt install -y gcc-multilib g++-multilib
 
       - name: Install Linux Arm Toolchains
-        if: matrix.targetOs == 'linux' && startsWith(matrix.arch, 'arm')
+        if: matrix.os == 'linux' && startsWith(matrix.arch, 'arm')
         run: sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libc6-dev-armhf-cross linux-libc-dev-armhf-cross binutils-aarch64-linux-gnu
 
       - uses: actions/setup-python@v3
@@ -58,16 +63,16 @@ jobs:
           submodules: true
 
       - name: Maximize Build Space
-        if: matrix.targetOs == 'win'
+        if: matrix.os == 'win'
         uses: hirnidrin/free-disk-space@main
 
       - name: Use ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: v0-${{ matrix.targetOs }}-${{ matrix.arch }}
+          key: v0-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Get Windows SDK
-        if: matrix.targetOs == 'win'
+        if: matrix.os == 'win'
         uses: actions/cache/restore@v3
         with:
           path: '*.zip'
@@ -77,11 +82,11 @@ jobs:
 
       - name: Build
         run: |
-          node scripts/bootstrap.js --target-os=${{ matrix.targetOs }} --target-cpu=${{ matrix.arch }} '--extra-args=cc_wrapper="ccache"' --node-repo=${{ inputs.repo || 'https://github.com/nodejs/node' }} --node-commit=${{ inputs.commit || '' }}
+          node scripts/bootstrap.js --target-os=${{ matrix.os }} --target-cpu=${{ matrix.arch }} '--extra-args=cc_wrapper="ccache"' --node-repo=${{ inputs.repo || 'https://github.com/nodejs/node' }} --node-commit=${{ inputs.commit || '' }}
           node scripts/build.js
 
       - name: Run Tests
-        if: runner.arch == matrix.arch && matrix.targetOs != 'win'
+        if: runner.arch == matrix.arch && matrix.os != 'win'
         run: |
           # Build tests.
           node scripts/build.js node_cctest node_embedtest overlapped_checker
