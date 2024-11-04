@@ -97,8 +97,12 @@ jobs:
           python node/tools/build_addons.py node/test/node-api $BUILD_ADDONS_ARGS
           python node/tools/build_addons.py node/test/js-native-api $BUILD_ADDONS_ARGS
 
-          # Run tests.
+          # Some tests assume the path of node binary
           cd node
+          mkdir -p out/Release
+          cd out/Release && ln -s ../../../out/Release/node . && cd -
+
+          # Run tests.
           ../out/Release/node_cctest
           ../out/Release/node test/embedding/test-embedding.js
           ./tools/test.py --shell ../out/Release/node js-native-api
