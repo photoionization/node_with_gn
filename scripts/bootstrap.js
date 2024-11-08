@@ -24,8 +24,6 @@ if (hostOs == 'linux') {
 
 // Checkout node.
 checkoutNode()
-// Checkout dependencies needed for building V8.
-checkoutDeps()
 
 const commonConfig = [
   `is_clang=${clang}`,
@@ -79,14 +77,6 @@ if (hostOs == 'linux') {
   // Ensure stable environment.
   commonConfig.push('use_sysroot=true')
 }
-for (const arg of argv) {
-  if (arg == '--goma') {
-    execSync('node scripts/goma.js')
-    commonConfig.push(`import("${path.resolve(__dirname, '../third_party/build-tools/')}/third_party/goma.gn")`)
-  } else if (arg.startsWith('--extra-args=')) {
-    commonConfig.push(...arg.substr(arg.indexOf('=') + 1).split(' '))
-  }
-}
 
 gen('out/Component', componentConfig)
 gen('out/Debug', debugConfig)
@@ -107,22 +97,6 @@ function checkoutNode() {
   if (nodeCommit) {
     execSync(`git fetch origin ${nodeCommit}`, {cwd: 'node'})
     execSync('git reset --hard FETCH_HEAD', {cwd: 'node'})
-  }
-}
-
-function checkoutDeps() {
-  const deps = {
-    "abseil-cpp": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp",
-    "build-tools": "https://github.com/electron/build-tools",
-    "icu": "https://chromium.googlesource.com/chromium/deps/icu",
-    "jinja2": "https://chromium.googlesource.com/chromium/src/third_party/jinja2",
-    "markupsafe": "https://chromium.googlesource.com/chromium/src/third_party/markupsafe",
-    "zlib": "https://chromium.googlesource.com/chromium/src/third_party/zlib",
-  }
-  for (const name in deps) {
-    if (fs.existsSync(`third_party/${name}`))
-      continue
-    execSync(`git clone --depth=1 ${deps[name]} third_party/${name}`)
   }
 }
 

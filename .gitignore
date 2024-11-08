@@ -4,13 +4,7 @@
 /out/
 
 /node/
-/third_party/abseil-cpp/
-/third_party/build-tools/
 /third_party/gn/
-/third_party/icu/
-/third_party/jinja2/
-/third_party/markupsafe/
-/third_party/zlib/
 
 .DS_Store
 .tags*
