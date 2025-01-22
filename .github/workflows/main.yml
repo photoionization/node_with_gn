@@ -24,8 +24,8 @@ jobs:
     runs-on: >-
       ${{
         (matrix.os == 'mac' && matrix.arch == 'arm64') &&
-          'macos-14' ||
-          (fromJson('{"linux":"ubuntu-22.04","mac":"macos-13","win":"ubuntu-22.04"}')[matrix.os])
+          'macos-15' ||
+          (fromJson('{"linux":"ubuntu-24.04","mac":"macos-13","win":"ubuntu-24.04"}')[matrix.os])
       }}
     continue-on-error: false
 
