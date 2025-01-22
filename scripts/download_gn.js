@@ -7,7 +7,7 @@ const path = require('path')
 const extract = require('extract-zip')
 const {pipeline} = require('stream/promises');
 
-const gnVersion = 'v0.11.4'
+const gnVersion = 'v0.11.1'
 const url = `https://github.com/yue/build-gn/releases/download/${gnVersion}/gn_${gnVersion}_${hostOs}_x64.zip`
 
 const gnDir = path.resolve('third_party', 'gn')
