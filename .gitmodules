@@ -22,3 +22,6 @@
 	path = third_party/abseil-cpp
 	url = https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp
 	shallow = true
+[submodule "third_party/fast_float/src"]
+	path = third_party/fast_float/src
+	url = https://chromium.googlesource.com/external/github.com/fastfloat/fast_float
