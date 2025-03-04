@@ -116,7 +116,9 @@ jobs:
           # added by https://github.com/nodejs/node/pull/52766
           # parallel/test-async-context-frame
           # broken by https://github.com/nodejs/node/pull/54510
-          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-worker-nearheaplimit-deadlock,wasm-allocation,parallel/test-async-context-frame
+          # parallel/test-fs-rm
+          # broken by https://github.com/nodejs/node/pull/57103
+          ./tools/test.py --shell ../out/Release/node --flaky-tests=dontcare --skip-tests=parallel/test-crypto-no-algorithm,parallel/test-worker-nearheaplimit-deadlock,wasm-allocation,parallel/test-async-context-frame,parallel/test-fs-rm
 
   vs-toolchain:
     runs-on: windows-2022
